@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Capacidade Produtiva</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .val-display {
+            font-weight: bold;
+            color: var(--primary-color);
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+        }
+
+        .results-card {
+            background-color: #e2eafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            text-align: center;
+            border: 1px solid #ccdaff;
+        }
+
+        .results-card h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #002b5e;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .discussion {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #555;
+            background: #fff;
+            padding: 10px;
+            border-left: 4px solid var(--primary-color);
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Simulador de Capacidade Produtiva</h1>
+
+        <!-- Tempo médio do ciclo -->
+        <div class="slider-container">
+            <div class="slider-header">
+                <label for="ciclo">Tempo médio do ciclo (segundos)</label>
+                <span class="val-display" id="cicloVal">30</span>
+            </div>
+            <input type="range" id="ciclo" min="30" max="300" value="30">
+        </div>
+
+        <!-- Número de funcionários -->
+        <div class="slider-container">
+            <div class="slider-header">
+                <label for="funcionarios">Número de funcionários</label>
+                <span class="val-display" id="funcionariosVal">1</span>
+            </div>
+            <input type="range" id="funcionarios" min="1" max="10" value="1">
+        </div>
+
+        <!-- Horas de trabalho por dia -->
+        <div class="slider-container">
+            <div class="slider-header">
+                <label for="horas">Horas de trabalho por dia</label>
+                <span class="val-display" id="horasVal">4</span>
+            </div>
+            <input type="range" id="horas" min="4" max="12" value="4">
+        </div>
+
+        <!-- Dias de trabalho por mês -->
+        <div class="slider-container">
+            <div class="slider-header">
+                <label for="dias">Dias de trabalho por mês</label>
+                <span class="val-display" id="diasVal">15</span>
+            </div>
+            <input type="range" id="dias" min="15" max="30" value="15">
+        </div>
+
+        <!-- Resultados -->
+        <div class="results-card">
+            <h2>Resultados da Produção</h2>
+            
+            <div style="text-align: left; margin-bottom: 15px;">
+                <strong>Capacidade em Horas:</strong> <span id="resHoras" class="result-value" style="font-size:18px;">0</span> h/mês
+            </div>
+            
+            <div style="text-align: left;">
+                <strong>Produção Mensal Estimada:</strong>
+                <div id="resProducao" class="result-value">0 unidades</div>
+            </div>
+
+            <div class="discussion" id="textoDiscussao">
+                Aguardando simulação...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mapeamento dos elementos
+        const cicloIn = document.getElementById('ciclo');
+        const funcIn = document.getElementById('funcionarios');
+        const horasIn = document.getElementById('horas');
+        const diasIn = document.getElementById('dias');
+
+        const cicloVal = document.getElementById('cicloVal');
+        const funcVal = document.getElementById('funcionariosVal');
+        const horasVal = document.getElementById('horasVal');
+        const diasVal = document.getElementById('diasVal');
+
+        const resHoras = document.getElementById('resHoras');
+        const resProducao = document.getElementById('resProducao');
+        const textoDiscussao = document.getElementById('textoDiscussao');
+
+        // Função para calcular e atualizar a tela
+        function calcularCapacidade() {
+            // Pegar valores atuais
+            const ciclo = parseInt(cicloIn.value);
+            const func = parseInt(funcIn.value);
+            const horas = parseInt(horasIn.value);
+            const dias = parseInt(diasIn.value);
+
+            // Atualizar os textos dos sliders (bolinhas)
+            cicloVal.textContent = ciclo + "s";
+            funcVal.textContent = func;
+            horasVal.textContent = horas + "h";
+            diasVal.textContent = dias + " dias";
+
+            // Cálculo da Capacidade Produtiva em Horas (Fórmula do slide)
+            // Capacidade Produtiva = numero de funcionários x horas x dias
+            const capacidadeHorasMensais = func * horas * dias;
+            
+            // Cálculo da Produção Física em Unidades
+            // Transformar horas em segundos e dividir pelo tempo do ciclo de 1 peça
+            const capacidadeSegundosMensais = capacidadeHorasMensais * 3600;
+            const producaoTotalUnidades = Math.floor(capacidadeSegundosMensais / ciclo);
+
+            // Atualizar tela de resultados
+            resHoras.textContent = capacidadeHorasMensais.toLocaleString('pt-BR');
+            resProducao.textContent = producaoTotalUnidades.toLocaleString('pt-BR') + " unidades";
+
+            // Discussão dos resultados (Dinâmica baseada no volume)
+            textoDiscussao.innerHTML = `<strong>Análise:</strong> Com uma equipe de ${func} pessoa(s) trabalhando ${horas}h por dia durante ${dias} dias, você dispõe de um total de ${capacidadeHorasMensais} horas produtivas no mês. Como cada unidade leva ${ciclo} segundos para ficar pronta, a capacidade máxima teórica do sistema é de ${producaoTotalUnidades.toLocaleString('pt-BR')} unidades mensais.`;
+        }
+
+        // Adicionar eventos para recalcular "ao movimentar as bolinhas"
+        [cicloIn, funcIn, horasIn, diasIn].forEach(input => {
+            input.addEventListener('input', calcularCapacidade);
+        });
+
+        // Chamada inicial para preencher a tela ao carregar
+        calcularCapacidade();
+    </script>
+</body>
+</html>
