@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Capacidade Produtiva</title>
+    <!-- Importando Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ajuste fino para os sliders */
+        input[type=range] {
+            height: 6px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            transition: background .15s ease-in-out;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans text-gray-800">
+
+    <!-- Container Principal do Simulador -->
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100">
+        
+        <!-- Cabeçalho -->
+        <div class="bg-blue-600 p-5 text-white text-center">
+            <h1 class="text-2xl font-bold">Simulador de Capacidade</h1>
+            <p class="text-blue-100 text-sm mt-1">Ajuste as variáveis para calcular a produção</p>
+        </div>
+
+        <div class="p-6">
+            <!-- Controles (Sliders) -->
+            <div class="space-y-5">
+                
+                <!-- Slider: Tempo de Ciclo -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label for="ciclo" class="text-sm font-semibold text-gray-700">Tempo médio do ciclo (segundos)</label>
+                        <span id="val-ciclo" class="text-sm font-bold text-blue-600 bg-blue-50 px-2 rounded">30s</span>
+                    </div>
+                    <input type="range" id="ciclo" min="30" max="300" value="30" class="w-full accent-blue-600">
+                </div>
+
+                <!-- Slider: Número de Funcionários -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label for="funcionarios" class="text-sm font-semibold text-gray-700">Número de funcionários</label>
+                        <span id="val-func" class="text-sm font-bold text-blue-600 bg-blue-50 px-2 rounded">1</span>
+                    </div>
+                    <input type="range" id="funcionarios" min="1" max="10" value="1" class="w-full accent-blue-600">
+                </div>
+
+                <!-- Slider: Horas por Dia -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label for="horas" class="text-sm font-semibold text-gray-700">Horas de trabalho por dia</label>
+                        <span id="val-horas" class="text-sm font-bold text-blue-600 bg-blue-50 px-2 rounded">4h</span>
+                    </div>
+                    <input type="range" id="horas" min="4" max="12" value="4" class="w-full accent-blue-600">
+                </div>
+
+                <!-- Slider: Dias por Mês -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label for="dias" class="text-sm font-semibold text-gray-700">Dias de trabalho por mês</label>
+                        <span id="val-dias" class="text-sm font-bold text-blue-600 bg-blue-50 px-2 rounded">15 dias</span>
+                    </div>
+                    <input type="range" id="dias" min="15" max="30" value="15" class="w-full accent-blue-600">
+                </div>
+            </div>
+
+            <!-- Painel de Resultados -->
+            <div class="mt-8 bg-gray-50 rounded-xl p-5 border border-gray-200">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Resultados</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <!-- Resultado: Horas -->
+                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 text-center">
+                        <div class="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Capacidade em Horas</div>
+                        <div id="res-horas" class="text-xl font-bold text-blue-700">0</div>
+                        <div class="text-xs text-gray-400">h/mês</div>
+                    </div>
+                    
+                    <!-- Resultado: Unidades -->
+                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 text-center">
+                        <div class="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Produção Mensal</div>
+                        <div id="res-unidades" class="text-xl font-bold text-green-600">0</div>
+                        <div class="text-xs text-gray-400">unidades</div>
+                    </div>
+                </div>
+
+                <!-- Parágrafo de Discussão Dinâmica -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg">
+                    <p id="discussao" class="text-sm text-gray-700 leading-relaxed"></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script de Lógica do Simulador -->
+    <script>
+        // Mapeando os elementos de input (sliders)
+        const inCiclo = document.getElementById('ciclo');
+        const inFunc = document.getElementById('funcionarios');
+        const inHoras = document.getElementById('horas');
+        const inDias = document.getElementById('dias');
+
+        // Mapeando os elementos de exibição de valor dos sliders
+        const valCiclo = document.getElementById('val-ciclo');
+        const valFunc = document.getElementById('val-func');
+        const valHoras = document.getElementById('val-horas');
+        const valDias = document.getElementById('val-dias');
+
+        // Mapeando os elementos de resultado
+        const resHoras = document.getElementById('res-horas');
+        const resUnidades = document.getElementById('res-unidades');
+        const txtDiscussao = document.getElementById('discussao');
+
+        // Função principal de cálculo e atualização da interface
+        function calcular() {
+            // Obtendo os valores atuais transformados em números
+            const ciclo = parseInt(inCiclo.value);
+            const func = parseInt(inFunc.value);
+            const horas = parseInt(inHoras.value);
+            const dias = parseInt(inDias.value);
+
+            // Atualizando os rótulos visuais ao lado dos sliders
+            valCiclo.textContent = ciclo + 's';
+            valFunc.textContent = func;
+            valHoras.textContent = horas + 'h';
+            valDias.textContent = dias + ' dias';
+
+            // 1. Cálculo da Capacidade em Horas
+            const capacidadeHoras = func * horas * dias;
+            
+            // 2. Cálculo da Produção Mensal Estimada
+            // (Capacidade em Horas * 3600 segundos) / Tempo do ciclo em segundos
+            const producaoUnidades = Math.floor((capacidadeHoras * 3600) / ciclo);
+
+            // Atualizando os resultados na tela (formatados com separador de milhar)
+            resHoras.textContent = capacidadeHoras.toLocaleString('pt-BR');
+            resUnidades.textContent = producaoUnidades.toLocaleString('pt-BR');
+
+            // Gerando o parágrafo dinâmico de discussão
+            txtDiscussao.innerHTML = `<strong>Análise:</strong> Com uma equipe de <strong>${func}</strong> funcionário(s) trabalhando <strong>${horas}h/dia</strong> por <strong>${dias} dias</strong> no mês, a capacidade total de trabalho é de <strong>${capacidadeHoras} horas</strong>. Como cada unidade demora <strong>${ciclo} segundos</strong> para ser concluída, a produção máxima estimada para este cenário é de <strong>${producaoUnidades.toLocaleString('pt-BR')} unidades</strong> mensais.`;
+        }
+
+        // Adicionando um "escutador de eventos" para cada slider.
+        // O evento 'input' é disparado continuamente enquanto a bolinha é arrastada.
+        [inCiclo, inFunc, inHoras, inDias].forEach(slider => {
+            slider.addEventListener('input', calcular);
+        });
+
+        // Chamada inicial para preencher os dados assim que a página carrega
+        calcular();
+    </script>
+</body>
+</html>
